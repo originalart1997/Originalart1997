@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Stylish + Saweria & Komentar</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  body { font-family: Arial; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
+  .container { max-width: 800px; width: 100%; }
+  .donate a { background: #ff5722; color: #fff; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-bottom: 20px; transition: 0.3s; }
+  .donate a:hover { background: #e64a19; }
+  .comments { background: #fff; padding: 20px; border-radius: 10px; max-height: 500px; overflow-y: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+  .comments input, .comments button { padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; }
+  .comments button { background: #28a745; color: white; border: none; cursor: pointer; margin-left: 5px; transition: 0.2s; }
+  .comments button:hover { background: #218838; }
+  .comment-list { margin-top: 15px; }
+  .comment-item { display: flex; flex-direction: column; background: #f1f1f1; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+  .comment-header { display: flex; align-items: center; margin-bottom: 5px; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: #007bff; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px; flex-shrink: 0; }
+  .comment-username { font-weight: bold; margin-right: 10px; }
+  .comment-time { font-size: 0.75em; color: #555; }
+  .comment-text { margin-bottom: 5px; }
+  .reply-btn { font-size: 0.8em; color: #007bff; cursor: pointer; background: none; border: none; padding: 0; margin-bottom: 5px; }
+  .replies { margin-left: 50px; margin-top: 5px; }
+  input.reply-input { width: calc(100% - 60px); margin-bottom: 5px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="donate">
+    <a href="https://saweria.co/username_kamu" target="_blank">Donate via Saweria</a>
+  </div>
+
+  <div class="comments">
+    <input type="text" id="username" placeholder="Nama kamu">
+    <input type="text" id="comment-input" placeholder="Tulis komentar...">
+    <button onclick="addComment()">Kirim</button>
+    <div class="comment-list" id="comment-list"></div>
+  </div>
+</div>
+
+<script>
+  // Ganti dengan config Firebase Web App-mu
+  const firebaseConfig = {
+    apiKey: "API_KEY",
+    authDomain: "PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "PROJECT_ID",
+    storageBucket: "PROJECT_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const commentListEl = document.getElementById('comment-list');
+  let allComments = [];
+
+  db.ref('comments').on('value', snap => {
+    allComments = snap.val() || [];
+    renderComments();
+  });
+
+  function renderComments() {
+    commentListEl.innerHTML = '';
+    allComments.forEach((c, index) => {
+      const div = document.createElement('div');
+      div.className = 'comment-item';
+      const header = document.createElement('div');
+      header.className = 'comment-header';
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.textContent = c.username[0].toUpperCase();
+      const uname = document.createElement('span');
+      uname.className = 'comment-username';
+      uname.textContent = c.username;
+      const time = document.createElement('span');
+      time.className = 'comment-time';
+      time.textContent = c.time || '';
+      header.appendChild(avatar);
+      header.appendChild(uname);
+      header.appendChild(time);
+      const text = document.createElement('div');
+      text.className = 'comment-text';
+      text.textContent = c.text;
+      div.appendChild(header);
+      div.appendChild(text);
+      commentListEl.appendChild(div);
+    });
+  }
+
+  function addComment() {
+    const username = document.getElementById('username').value || "Anonim";
+    const text = document.getElementById('comment-input').value;
+    if(!text) return;
+    const timestamp = new Date().toLocaleString();
+    allComments.push({username, text, time: timestamp});
+    db.ref('comments').set(allComments);
+    document.getElementById('comment-input').value = '';
+  }
+</script>
+
+</body>
+</html>
