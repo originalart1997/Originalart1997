@@ -43,8 +43,8 @@
 </div>
 
 <script>
-  // Ganti dengan config Firebase Web App-mu
-  const firebaseConfig = {
+  // 
+  const originalart1997 = {
     apiKey: "API_KEY",
     authDomain: "PROJECT_ID.firebaseapp.com",
     databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com",
