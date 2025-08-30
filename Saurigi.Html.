@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OriginalArt1997</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; background:#f9f9f9; }
+h1 { text-align:center; }
+.container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
+textarea, input { width: 100%; padding: 8px; margin: 5px 0; border-radius:5px; border:1px solid #ccc; }
+button { padding: 10px 15px; border:none; border-radius:5px; cursor:pointer; background:#f68c1f; color:#fff; }
+button:hover { background:#e68900; }
+.comment { border-bottom:1px solid #eee; padding:8px 0; }
+.comment strong { display:block; }
+.reply { margin-left: 20px; padding:5px; background:#f1f1f1; border-radius:5px; }
+.emoji-picker button { font-size: 1.2rem; margin-right:5px; }
+</style>
+</head>
+<body>
+
+<h1>OriginalArt1997</h1>
+
+<div class="container">
+  <p>Dukung saya di Saweria:</p>
+  <a href="https://saweria.co/Originalart" target="_blank"><button>Donasi via Saweria</button></a>
+
+  <hr>
+
+  <h2>Komentar</h2>
+  <input type="text" id="username" placeholder="Nama Anda">
+  <textarea id="message" placeholder="Tulis komentar..."></textarea>
+  
+  <div class="emoji-picker">
+    <button onclick="addEmoji('😊')">😊</button>
+    <button onclick="addEmoji('🔥')">🔥</button>
+    <button onclick="addEmoji('👍')">👍</button>
+    <button onclick="addEmoji('❤️')">❤️</button>
+  </div>
+  
+  <button onclick="postComment()">Kirim</button>
+
+  <div id="comments"></div>
+</div>
+
+<!-- Firebase Modules -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAkJQKqwfFBeQ8wuG-n_ZY1Bw-JCTd6ijU",
+  authDomain: "originalart-1d5ae.firebaseapp.com",
+  databaseURL: "https://originalart-1d5ae-default-rtdb.firebaseio.com",
+  projectId: "originalart-1d5ae",
+  storageBucket: "originalart-1d5ae.firebasestorage.app",
+  messagingSenderId: "102758038534",
+  appId: "1:102758038534:web:32338bf54be17aca929787",
+  measurementId: "G-3FVKNW65X4"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let replyToId = null;
+
+function addEmoji(emoji) {
+  const input = document.getElementById("message");
+  input.value += emoji;
+  input.focus();
+}
+
+function postComment() {
+  const username = document.getElementById("username").value.trim() || "Anonim";
+  const message = document.getElementById("message").value.trim();
+  if(!message) return;
+
+  const newCommentRef = push(ref(db, "comments"));
+  set(newCommentRef, {
+    username: username,
+    text: message,
+    timestamp: new Date().toLocaleString(),
+    parentId: replyToId
+  });
+
+  document.getElementById("message").value = "";
+  replyToId = null;
+}
+
+const commentsDiv = document.getElementById("comments");
+onValue(ref(db, "comments"), snapshot => {
+  const data = snapshot.val() || {};
+  commentsDiv.innerHTML = "";
+
+  function renderComments(parentId=null, container=commentsDiv) {
+    for(let id in data) {
+      const c = data[id];
+      if(c.parentId === parentId) {
+        const div = document.createElement("div");
+        div.className = parentId ? "reply" : "comment";
+        div.innerHTML = `
+          <strong>${c.username}</strong>
+          <span>${c.text}</span><br>
+          <small>${c.timestamp}</small>
+          <button onclick="reply('${id}')">Balas</button>
+        `;
+        container.appendChild(div);
+        renderComments(id, div);
+      }
+    }
+  }
+
+  renderComments();
+});
+
+function reply(id) {
+  replyToId = id;
+  const input = document.getElementById("message");
+  input.focus();
+  input.value = "@reply ";
+}
+</script>
+
+</body>
+</html>
